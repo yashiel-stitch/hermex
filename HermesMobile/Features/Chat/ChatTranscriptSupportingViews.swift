@@ -126,6 +126,7 @@ struct ChatScrollObserver: UIViewRepresentable {
         /// latch reasons about.
         private var isUserScrollSessionActive = false
         private var settleWorkItem: DispatchWorkItem?
+        private let infersScrollSessionFromOffset = ProcessInfo.processInfo.isiOSAppOnMac
         var scrollPositionController: ChatScrollPositionController? {
             didSet {
                 guard oldValue !== scrollPositionController else { return }
@@ -172,8 +173,11 @@ struct ChatScrollObserver: UIViewRepresentable {
             scrollPositionController?.attach(to: scrollView)
 
             observedPanGesture?.removeTarget(self, action: nil)
-            scrollView.panGestureRecognizer.addTarget(self, action: #selector(handlePanGesture(_:)))
-            observedPanGesture = scrollView.panGestureRecognizer
+            observedPanGesture = nil
+            if !infersScrollSessionFromOffset {
+                scrollView.panGestureRecognizer.addTarget(self, action: #selector(handlePanGesture(_:)))
+                observedPanGesture = scrollView.panGestureRecognizer
+            }
 
             observations = [
                 scrollView.observe(\.contentOffset, options: [.new]) { [weak self] _, _ in
@@ -206,11 +210,10 @@ struct ChatScrollObserver: UIViewRepresentable {
         @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
             switch gesture.state {
             case .began:
-                cancelSettle()
-                isUserScrollSessionActive = true
-                onFollowEvent(.userScrollBegin)
+                beginUserScrollSession(source: "pan")
             case .ended, .cancelled, .failed:
                 guard isUserScrollSessionActive, let scrollView else { return }
+                MacGestureBreadcrumbs.transition("transcript", "pan-released")
                 // Remember where the finger lifted: streaming growth during the
                 // momentum-detection window must not turn a release at the live
                 // edge into an opt-out from follow.
@@ -223,6 +226,25 @@ struct ChatScrollObserver: UIViewRepresentable {
                 }
             default:
                 break
+            }
+        }
+
+        private func beginUserScrollSession(source: StaticString) {
+            cancelSettle()
+            isUserScrollSessionActive = true
+            MacGestureBreadcrumbs.transition("transcript", "scroll-began", detail: "\(source)")
+            onFollowEvent(.userScrollBegin)
+        }
+
+        private func trackInferredScrollSession(_ scrollView: UIScrollView) {
+            let isDragging = scrollView.isDragging || scrollView.isTracking
+            guard isDragging else { return }
+            guard isUserScrollSessionActive else {
+                beginUserScrollSession(source: "offset")
+                return
+            }
+            scheduleSettle(after: ChatScrollPolicy.dragSettleDelay) { [weak self] in
+                self?.finishUserScrollSessionIfSettled()
             }
         }
 
@@ -252,6 +274,7 @@ struct ChatScrollObserver: UIViewRepresentable {
         private func finishUserScrollSession(isAtBottom: Bool) {
             cancelSettle()
             isUserScrollSessionActive = false
+            MacGestureBreadcrumbs.transition("transcript", "scroll-ended", detail: "atBottom=\(isAtBottom)")
             onFollowEvent(.userScrollEnd(isAtBottom: isAtBottom))
         }
 
@@ -297,6 +320,9 @@ struct ChatScrollObserver: UIViewRepresentable {
 
         func reportMetrics(delivery: MetricDelivery) {
             guard let scrollView else { return }
+            if infersScrollSessionFromOffset {
+                trackInferredScrollSession(scrollView)
+            }
             trackMomentum(scrollView)
 
             guard let geometry = geometry(of: scrollView) else { return }

@@ -1,6 +1,20 @@
 import CoreGraphics
 import Foundation
+import OSLog
 import SwiftUI
+
+enum MacGestureBreadcrumbs {
+    static let isEnabled = ProcessInfo.processInfo.isiOSAppOnMac
+    private static let logger = Logger(
+        subsystem: Bundle.main.bundleIdentifier ?? "Hermex",
+        category: "mac-gestures"
+    )
+
+    static func transition(_ view: StaticString, _ state: StaticString, detail: String = "") {
+        guard isEnabled else { return }
+        logger.info("\(view, privacy: .public) \(state, privacy: .public) \(detail, privacy: .public)")
+    }
+}
 
 /// Pure decision rules for the chat transcript's auto-scroll behavior.
 ///

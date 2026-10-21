@@ -347,6 +347,7 @@ final class ReviewDiffCanvasView: UIView, UIGestureRecognizerDelegate {
     @objc private func handleHorizontalPan(_ gesture: UIPanGestureRecognizer) {
         switch gesture.state {
         case .began:
+            MacGestureBreadcrumbs.transition("diff", "horizontal-pan-began")
             stopHorizontalDeceleration()
             let target = horizontalPanTarget(at: gesture.location(in: self))
             activePanFileID = target?.fileID
@@ -361,6 +362,7 @@ final class ReviewDiffCanvasView: UIView, UIGestureRecognizerDelegate {
                 kind: kind
             )
             guard gesture.state != .changed else { return }
+            MacGestureBreadcrumbs.transition("diff", "horizontal-pan-ended")
             activePanFileID = nil
             activePanKind = nil
             if gesture.state == .ended, kind == .code {

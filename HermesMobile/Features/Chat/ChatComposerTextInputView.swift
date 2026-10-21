@@ -531,12 +531,14 @@ private struct ComposerTextView: UIViewRepresentable {
         }
 
         func textViewDidBeginEditing(_ textView: UITextView) {
+            MacGestureBreadcrumbs.transition("composer", "focus-began")
             if !isFocused {
                 isFocused = true
             }
         }
 
         func textViewDidEndEditing(_ textView: UITextView) {
+            MacGestureBreadcrumbs.transition("composer", "focus-ended")
             if let editor = textView as? ComposerChipTextView, editor.isInNavigationTransition {
                 return
             }

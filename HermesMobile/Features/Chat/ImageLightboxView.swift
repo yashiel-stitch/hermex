@@ -436,6 +436,8 @@ struct ZoomableImageView: UIViewRepresentable {
             let velocity = gesture.velocity(in: scrollView)
 
             switch gesture.state {
+            case .began:
+                MacGestureBreadcrumbs.transition("lightbox", "dismiss-pan-began")
             case .changed:
                 let progress = min(1, max(0, translation.y / ImageLightboxGesturePolicy.dismissDistance))
                 let shrink = 1 - progress * 0.15
@@ -448,9 +450,11 @@ struct ZoomableImageView: UIViewRepresentable {
                 translation: translation.y,
                 velocity: velocity.y
             ):
+                MacGestureBreadcrumbs.transition("lightbox", "dismiss-pan-ended", detail: "dismiss")
                 dismiss(from: translation)
 
             case .ended, .cancelled, .failed:
+                MacGestureBreadcrumbs.transition("lightbox", "dismiss-pan-ended", detail: "restore")
                 restoreImagePosition()
 
             default:
