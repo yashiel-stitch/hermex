@@ -231,7 +231,8 @@ struct ChatTranscriptView: View {
                     .simultaneousGesture(
                         TapGesture().onEnded {
                             onDismissKeyboard()
-                        }
+                        },
+                        including: ProcessInfo.processInfo.isiOSAppOnMac ? .subviews : .all
                     )
 
                     if showsScrollToBottomButton {
