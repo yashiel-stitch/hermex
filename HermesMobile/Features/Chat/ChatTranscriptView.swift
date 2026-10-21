@@ -6,7 +6,7 @@ import UIKit
 /// stop at `maximum` and centre it, so lines stay short enough to read. The
 /// composer caps at the same column so their edges line up.
 enum ChatReadingWidth {
-    static let maximum: CGFloat = 768
+    static let maximum: CGFloat = ProcessInfo.processInfo.isiOSAppOnMac ? .infinity : 768
 
     /// Width of the transcript column inside `horizontalPadding` on each side.
     static func contentWidth(viewportWidth: CGFloat, horizontalPadding: CGFloat) -> CGFloat {
