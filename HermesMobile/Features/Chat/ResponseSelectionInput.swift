@@ -2,7 +2,7 @@ import UIKit
 
 /// Read-only UITextInput adapter. UIKit owns gestures, handles, and the edit menu;
 /// the existing SwiftUI leaves continue to own rendering and link interactions.
-final class ResponseSelectionInput: UIView, UITextInput, UITextInteractionDelegate {
+final class ResponseSelectionInput: UIView, UITextInput, UITextInteractionDelegate, UIGestureRecognizerDelegate {
     /// Nil where there is no composer to quote into; the menu then omits Ask Hermex.
     var onAskHermex: ((String) -> Void)?
     let leaves = NSHashTable<ResponseSelectionLeafView>.weakObjects()
@@ -34,12 +34,66 @@ final class ResponseSelectionInput: UIView, UITextInput, UITextInteractionDelega
         set {}
     }
 
+    static let usesPointerDragSelection = ProcessInfo.processInfo.isiOSAppOnMac
+    private var pointerDragAnchor: CGPoint?
+    private lazy var pointerDragSelection: UIPanGestureRecognizer = {
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePointerDragSelection(_:)))
+        pan.allowedTouchTypes = [NSNumber(value: UITouch.TouchType.indirectPointer.rawValue)]
+        pan.allowedScrollTypesMask = []
+        pan.delegate = self
+        return pan
+    }()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
         selectionInteraction.textInput = self
         selectionInteraction.delegate = self
         addInteraction(selectionInteraction)
+        if Self.usesPointerDragSelection {
+            addGestureRecognizer(pointerDragSelection)
+        }
+    }
+
+    func selectDragged(from anchor: CGPoint, to point: CGPoint) {
+        guard let start = closestPosition(to: anchor), let end = closestPosition(to: point) else { return }
+        selectedTextRange = textRange(from: start, to: end)
+    }
+
+    @objc private func handlePointerDragSelection(_ gesture: UIPanGestureRecognizer) {
+        switch gesture.state {
+        case .began:
+            let anchor = pointerDragStart(of: gesture)
+            pointerDragAnchor = anchor
+            becomeFirstResponder()
+            selectDragged(from: anchor, to: gesture.location(in: self))
+        case .changed:
+            guard let pointerDragAnchor else { return }
+            selectDragged(from: pointerDragAnchor, to: gesture.location(in: self))
+        case .ended, .cancelled, .failed:
+            pointerDragAnchor = nil
+            if selectedTextRange?.isEmpty == true { selectedTextRange = nil }
+        default:
+            break
+        }
+    }
+
+    private func pointerDragStart(of gesture: UIPanGestureRecognizer) -> CGPoint {
+        let location = gesture.location(in: self)
+        let translation = gesture.translation(in: self)
+        return CGPoint(x: location.x - translation.x, y: location.y - translation.y)
+    }
+
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let pan = gestureRecognizer as? UIPanGestureRecognizer, pan === pointerDragSelection else {
+            return super.gestureRecognizerShouldBegin(gestureRecognizer)
+        }
+        let start = pointerDragStart(of: pan)
+        return document.glyphs.contains { $0.rect.contains(start) }
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+        gestureRecognizer === pointerDragSelection
     }
 
     @available(*, unavailable)

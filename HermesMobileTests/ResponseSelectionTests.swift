@@ -145,6 +145,31 @@ final class ResponseSelectionTests: XCTestCase {
         let emoji = try XCTUnwrap(controller.input.characterRange(byExtending: ResponseTextPosition(2), in: .right))
         XCTAssertEqual(controller.input.text(in: emoji), "👩🏽‍💻")
     }
+
+    func testPointerDragGrowsTheSelectionWhileItMoves() async throws {
+        let controller = ResponseSelectionController()
+        controller.loadViewIfNeeded()
+        controller.host.rootView = AnyView(Text("First paragraph of a reply").responseSelectableText("First paragraph of a reply")
+            .responseSelectionDocument(controller.scope))
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 200))
+        window.rootViewController = controller
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        await render(window)
+        let input = controller.input
+        input.selectAll(nil)
+        let whole = try XCTUnwrap(input.selectionRects(for: try XCTUnwrap(input.selectedTextRange)).first).rect
+        let anchor = CGPoint(x: whole.minX + 1, y: whole.midY)
+
+        input.selectDragged(from: anchor, to: CGPoint(x: whole.midX, y: whole.midY))
+        let partial = try XCTUnwrap(input.text(in: try XCTUnwrap(input.selectedTextRange)))
+        XCTAssertTrue("First paragraph of a reply".hasPrefix(partial))
+        XCTAssertFalse(partial.isEmpty)
+        XCTAssertLessThan(partial.count, "First paragraph of a reply".count)
+
+        input.selectDragged(from: anchor, to: CGPoint(x: whole.maxX + 20, y: whole.midY))
+        XCTAssertEqual(input.text(in: try XCTUnwrap(input.selectedTextRange)), "First paragraph of a reply")
+    }
 }
 
 @MainActor
