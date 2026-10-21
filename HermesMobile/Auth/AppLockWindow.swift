@@ -20,6 +20,9 @@ import UIKit
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene, session.role == .windowApplication else { return }
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            windowScene.sizeRestrictions?.minimumSize = CGSize(width: 960, height: 600)
+        }
         let window = UIWindow(windowScene: windowScene)
         window.windowLevel = .alert + 1
         let host = UIHostingController(rootView: AppLockView(lock: lock, icon: .current))
