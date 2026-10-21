@@ -164,6 +164,7 @@ struct SelectableTextPresentationView: View {
                         Button("Done") {
                             dismiss()
                         }
+                        .keyboardShortcut(.cancelAction)
                     }
                 }
         }

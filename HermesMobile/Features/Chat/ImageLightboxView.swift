@@ -176,6 +176,7 @@ struct ImageLightboxView<Actions: View>: View {
                     accessibilityLabel: String(localized: "Done"),
                     action: { dismiss() }
                 )
+                .keyboardShortcut(.cancelAction)
 
                 Spacer(minLength: 0)
 

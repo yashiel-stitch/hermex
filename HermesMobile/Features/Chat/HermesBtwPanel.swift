@@ -140,6 +140,7 @@ struct HermesBtwFullScreen: View {
                     Button(action: onCollapse) {
                         Label("Collapse side question", systemImage: "arrow.down.right.and.arrow.up.left")
                     }
+                    .keyboardShortcut(.cancelAction)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: onClose) {
