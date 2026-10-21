@@ -934,7 +934,8 @@ struct MessageComposerView: View {
     /// sheet is up (so a picker never snaps it shut). `shouldRestoreFocus…`
     /// bridges the gap between a sheet dismissing and focus coming back.
     private var isExpanded: Bool {
-        isFocused
+        ProcessInfo.processInfo.isiOSAppOnMac
+            || isFocused
             || !quotes.isEmpty
             || shouldRestoreFocusAfterPresentation
             || showsAllModelsSheet
