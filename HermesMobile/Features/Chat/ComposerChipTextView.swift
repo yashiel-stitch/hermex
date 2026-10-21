@@ -594,10 +594,17 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
             let returnCommand = UIKeyCommand(
                 input: ComposerKeyboardCommand.input,
                 modifierFlags: [],
-                action: #selector(sendMessageFromReturnKey)
+                action: #selector(sendMessageFromReturnKey(_:))
             )
             returnCommand.wantsPriorityOverSystemBehavior = true
             commands.append(returnCommand)
+            let newlineCommand = UIKeyCommand(
+                input: ComposerKeyboardCommand.input,
+                modifierFlags: .shift,
+                action: #selector(insertNewlineFromKeyboard)
+            )
+            newlineCommand.wantsPriorityOverSystemBehavior = true
+            commands.append(newlineCommand)
             if isKeyboardStopEnabled {
                 commands.append(UIKeyCommand(
                     input: UIKeyCommand.inputEscape,
@@ -626,7 +633,7 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
             return isKeyboardSendEnabled
         }
 
-        if action == #selector(sendMessageFromReturnKey) {
+        if action == #selector(sendMessageFromReturnKey(_:)) || action == #selector(insertNewlineFromKeyboard) {
             return markedTextRange == nil
         }
 
@@ -654,8 +661,17 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
         onKeyboardSend()
     }
 
-    @objc private func sendMessageFromReturnKey() {
+    @objc private func sendMessageFromReturnKey(_ sender: Any?) {
+        if let command = sender as? UIKeyCommand, command.modifierFlags.contains(.shift) {
+            insertNewlineFromKeyboard()
+            return
+        }
         sendMessageFromKeyboard()
+    }
+
+    @objc func insertNewlineFromKeyboard() {
+        guard markedTextRange == nil else { return }
+        insertText("\n")
     }
 
     @objc private func stopResponseFromKeyboard() {
