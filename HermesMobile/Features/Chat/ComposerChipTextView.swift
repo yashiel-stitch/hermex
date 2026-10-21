@@ -64,6 +64,7 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
 
     var acceptsAttachments = true
     var isKeyboardSendEnabled = false
+    var usesMacKeyCommands = ProcessInfo.processInfo.isiOSAppOnMac
     var onKeyboardSend: () -> Void = {}
     /// The chat's last sent message, which ↑ brings back into an empty editor
     /// on a hardware keyboard. Nil where there is no single author to recall
@@ -586,8 +587,18 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
             input: ComposerKeyboardCommand.input,
             modifierFlags: ComposerKeyboardCommand.modifierFlags
         )
+        var commands = (super.keyCommands ?? []) + [sendCommand]
+        if usesMacKeyCommands {
+            let returnCommand = UIKeyCommand(
+                input: ComposerKeyboardCommand.input,
+                modifierFlags: [],
+                action: #selector(sendMessageFromReturnKey)
+            )
+            returnCommand.wantsPriorityOverSystemBehavior = true
+            commands.append(returnCommand)
+        }
         guard recallLastSentText != nil else {
-            return (super.keyCommands ?? []) + [sendCommand]
+            return commands
         }
         let recallCommand = UIKeyCommand(
             title: ComposerRecall.commandTitle,
@@ -597,12 +608,17 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
         )
         // Arrow keys go to text editing first otherwise.
         recallCommand.wantsPriorityOverSystemBehavior = true
-        return (super.keyCommands ?? []) + [sendCommand, recallCommand]
+        commands.append(recallCommand)
+        return commands
     }
 
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
         if action == #selector(sendMessageFromKeyboard) {
             return isKeyboardSendEnabled
+        }
+
+        if action == #selector(sendMessageFromReturnKey) {
+            return markedTextRange == nil
         }
 
         if action == #selector(recallLastSentTextFromKeyboard) {
@@ -623,6 +639,10 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
     @objc private func sendMessageFromKeyboard() {
         guard isKeyboardSendEnabled else { return }
         onKeyboardSend()
+    }
+
+    @objc private func sendMessageFromReturnKey() {
+        sendMessageFromKeyboard()
     }
 
     /// What ↑ would bring back. Only an empty editor takes it, so ↑ inside a

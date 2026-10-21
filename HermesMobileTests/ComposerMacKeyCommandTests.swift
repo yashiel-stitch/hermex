@@ -1,0 +1,49 @@
+import UIKit
+import XCTest
+@testable import HermesMobile
+
+@MainActor
+final class ComposerMacKeyCommandTests: XCTestCase {
+    private func command(_ input: String, in textView: ComposerChipTextView) -> UIKeyCommand? {
+        textView.keyCommands?.first { $0.input == input && $0.modifierFlags.isEmpty }
+    }
+
+    private func macTextView() -> ComposerChipTextView {
+        let textView = ComposerChipTextView()
+        textView.usesMacKeyCommands = true
+        return textView
+    }
+
+    func testPlainReturnIsNotClaimedOffTheMac() {
+        let textView = ComposerChipTextView()
+        textView.usesMacKeyCommands = false
+
+        XCTAssertNil(command("\r", in: textView))
+    }
+
+    func testReturnSendsOnlyThroughTheSendGateAndYieldsToIMEComposition() throws {
+        let textView = macTextView()
+        var sends = 0
+        textView.onKeyboardSend = { sends += 1 }
+        let returnCommand = try XCTUnwrap(command("\r", in: textView))
+        XCTAssertTrue(returnCommand.wantsPriorityOverSystemBehavior)
+        let send = try XCTUnwrap(returnCommand.action)
+
+        textView.perform(send, with: nil)
+        XCTAssertEqual(sends, 0, "Send gate closed: Return does not send")
+
+        textView.isKeyboardSendEnabled = true
+        textView.perform(send, with: nil)
+        XCTAssertEqual(sends, 1)
+
+        XCTAssertTrue(textView.canPerformAction(send, withSender: nil))
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 480))
+        window.addSubview(textView)
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        textView.becomeFirstResponder()
+        textView.setMarkedText("か", selectedRange: NSRange(location: 0, length: 1))
+        XCTAssertNotNil(textView.markedTextRange)
+        XCTAssertFalse(textView.canPerformAction(send, withSender: nil), "IME composition keeps Return")
+    }
+}

@@ -308,6 +308,7 @@
 		C28702000000000000000005 /* ChatDraftAttachmentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28702000000000000000006 /* ChatDraftAttachmentStore.swift */; };
 		C28702000000000000000007 /* ChatDraftAttachmentStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28702000000000000000008 /* ChatDraftAttachmentStoreTests.swift */; };
 		C0DE89400000000000000005 /* ComposerRecallTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE89400000000000000006 /* ComposerRecallTests.swift */; };
+		C0DE8940000000000000000A /* ComposerMacKeyCommandTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE8940000000000000000B /* ComposerMacKeyCommandTests.swift */; };
 		C0DE89400000000000000007 /* ComposerDocumentThumbnailsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE89400000000000000008 /* ComposerDocumentThumbnailsTests.swift */; };
 		C04400000000000000000003 /* CacheFallbackPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C04400000000000000000004 /* CacheFallbackPolicyTests.swift */; };
 		C86900000000000000000003 /* NetworkPathMonitorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86900000000000000000004 /* NetworkPathMonitorTests.swift */; };
@@ -977,6 +978,7 @@
 		C28702000000000000000006 /* ChatDraftAttachmentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDraftAttachmentStore.swift; sourceTree = "<group>"; };
 		C28702000000000000000008 /* ChatDraftAttachmentStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDraftAttachmentStoreTests.swift; sourceTree = "<group>"; };
 		C0DE89400000000000000006 /* ComposerRecallTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerRecallTests.swift; sourceTree = "<group>"; };
+		C0DE8940000000000000000B /* ComposerMacKeyCommandTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerMacKeyCommandTests.swift; sourceTree = "<group>"; };
 		C0DE89400000000000000008 /* ComposerDocumentThumbnailsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComposerDocumentThumbnailsTests.swift; sourceTree = "<group>"; };
 		C04400000000000000000004 /* CacheFallbackPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheFallbackPolicyTests.swift; sourceTree = "<group>"; };
 		C86900000000000000000004 /* NetworkPathMonitorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkPathMonitorTests.swift; sourceTree = "<group>"; };
@@ -1473,6 +1475,7 @@
 				C28702000000000000000004 /* ChatDraftStoreTests.swift */,
 				C28702000000000000000008 /* ChatDraftAttachmentStoreTests.swift */,
 				C0DE89400000000000000006 /* ComposerRecallTests.swift */,
+				C0DE8940000000000000000B /* ComposerMacKeyCommandTests.swift */,
 				C0DE89400000000000000008 /* ComposerDocumentThumbnailsTests.swift */,
 				10CA110C0DE000000000C002 /* LocalizationCatalogTests.swift */,
 				1A2B3C4D5E6F7000000000BC /* APIClientTests.swift */,
@@ -3075,6 +3078,7 @@
 				C28702000000000000000003 /* ChatDraftStoreTests.swift in Sources */,
 				C28702000000000000000007 /* ChatDraftAttachmentStoreTests.swift in Sources */,
 				C0DE89400000000000000005 /* ComposerRecallTests.swift in Sources */,
+				C0DE8940000000000000000A /* ComposerMacKeyCommandTests.swift in Sources */,
 				C0DE89400000000000000007 /* ComposerDocumentThumbnailsTests.swift in Sources */,
 				B5A100000000000000000009 /* ShareInputReaderTests.swift in Sources */,
 				B5A100000000000000000060 /* AuthManagerStateTests.swift in Sources */,
