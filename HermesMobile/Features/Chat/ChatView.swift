@@ -279,6 +279,8 @@ struct ChatView: View {
     @AppStorage(SectionVisibilitySettings.chatFilesKey) private var showsFilesButton = true
     @AppStorage(SectionVisibilitySettings.chatGitKey) private var showsGitControls = true
     @State private var showsFilesPanel = false
+    @State private var filesPanelFile: FileTreeNode?
+    @State private var filesPanelFilePrefetch: Task<FileResponse, Error>?
     private let opensFilesAsPanel = ProcessInfo.processInfo.isiOSAppOnMac
 
     let session: SessionSummary
@@ -860,6 +862,17 @@ struct ChatView: View {
         return browsableHermesWorkspace == nil ? nil : viewModel.hermesWorkspaceFiles
     }
 
+    private func openFileInFilesPanel(_ node: FileTreeNode, prefetch: Task<FileResponse, Error>?) {
+        filesPanelFilePrefetch = prefetch
+        filesPanelFile = node
+    }
+
+    private func closeFilesPanelFile() {
+        filesPanelFile = nil
+        filesPanelFilePrefetch?.cancel()
+        filesPanelFilePrefetch = nil
+    }
+
     /// What a MEDIA reference downloads through: the webui session, or a Hermes chat's host,
     /// whatever its backend, since the host resolves the path against the session.
     private var transcriptMediaFiles: (any WorkspaceFileClient)? {
@@ -1103,6 +1116,7 @@ struct ChatView: View {
                                 if opensFilesAsPanel {
                                     Button {
                                         showsFilesPanel.toggle()
+                                        if !showsFilesPanel { closeFilesPanelFile() }
                                     } label: {
                                         Label("Files", systemImage: "folder")
                                     }
@@ -1163,10 +1177,34 @@ struct ChatView: View {
                     HStack(spacing: 0) {
                         Divider()
                         NavigationStack {
-                            FileBrowserView(files: workspaceFiles, onAPIError: onAPIError)
+                            FileBrowserView(files: workspaceFiles, onAPIError: onAPIError, onOpenFile: openFileInFilesPanel)
                         }
-                        .frame(width: 380)
+                        .frame(width: filesPanelFile == nil ? 380 : 300)
+
+                        if let filesPanelFile {
+                            Divider()
+                            NavigationStack {
+                                FilePreviewView(
+                                    files: workspaceFiles,
+                                    entry: filesPanelFile.entry,
+                                    prefetchedFile: filesPanelFilePrefetch,
+                                    onAPIError: onAPIError
+                                )
+                                .toolbar {
+                                    ToolbarItem(placement: .topBarLeading) {
+                                        Button(action: closeFilesPanelFile) {
+                                            Image(systemName: "xmark")
+                                        }
+                                        .keyboardShortcut(.cancelAction)
+                                        .accessibilityLabel("Close")
+                                    }
+                                }
+                            }
+                            .id(filesPanelFile.path)
+                            .frame(width: 560)
+                        }
                     }
+                    .onChange(of: workspaceFiles?.scope) { closeFilesPanelFile() }
                 }
             }
             .fullScreenCover(item: $attachmentImageItem) { item in

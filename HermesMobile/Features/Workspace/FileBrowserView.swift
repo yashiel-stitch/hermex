@@ -7,15 +7,21 @@ struct FileBrowserView: View {
     let onAPIError: (Error) -> Void
 
     private let files: (any WorkspaceFileClient)?
+    private let onOpenFile: ((FileTreeNode, Task<FileResponse, Error>?) -> Void)?
     @State private var viewModel: FileBrowserViewModel
     @State private var searchText = ""
     @State private var openedFile: FileTreeNode?
     /// The warm fetch handed over when `openedFile` was tapped; consumed by that preview only.
     @State private var openedFilePrefetch: Task<FileResponse, Error>?
 
-    init(files: (any WorkspaceFileClient)?, onAPIError: @escaping (Error) -> Void) {
+    init(
+        files: (any WorkspaceFileClient)?,
+        onAPIError: @escaping (Error) -> Void,
+        onOpenFile: ((FileTreeNode, Task<FileResponse, Error>?) -> Void)? = nil
+    ) {
         self.files = files
         self.onAPIError = onAPIError
+        self.onOpenFile = onOpenFile
         _viewModel = State(initialValue: FileBrowserViewModel(files: files))
     }
 
@@ -178,8 +184,13 @@ struct FileBrowserView: View {
             return
         }
 
-        openedFilePrefetch = viewModel.takePrefetch(for: node.path)
-        openedFile = node
+        let prefetch = viewModel.takePrefetch(for: node.path)
+        if let onOpenFile {
+            onOpenFile(node, prefetch)
+        } else {
+            openedFilePrefetch = prefetch
+            openedFile = node
+        }
         Task { await viewModel.select(path: node.path) }
     }
 
