@@ -27,4 +27,9 @@ final class InAppBrowserPolicyTests: XCTestCase {
     func testAWebLinkWithoutAHostGoesToTheSystem() {
         XCTAssertFalse(InAppBrowserPolicy.opensInApp(URL(string: "https:")!))
     }
+
+    func testOnTheMacWebLinksGoToTheDefaultBrowser() {
+        XCTAssertFalse(InAppBrowserPolicy.opensInApp(URL(string: "https://example.com")!, onMac: true))
+        XCTAssertTrue(InAppBrowserPolicy.opensInApp(URL(string: "https://example.com")!, onMac: false))
+    }
 }

@@ -5,7 +5,8 @@ import Foundation
 /// `SFSafariViewController` raises for any scheme but `http(s)`, so every
 /// presentation checks this first.
 enum InAppBrowserPolicy {
-    static func opensInApp(_ url: URL) -> Bool {
+    static func opensInApp(_ url: URL, onMac: Bool = ProcessInfo.processInfo.isiOSAppOnMac) -> Bool {
+        guard !onMac else { return false }
         guard let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https" else { return false }
         return url.host()?.isEmpty == false
     }

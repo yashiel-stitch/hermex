@@ -21,6 +21,7 @@ struct TranscriptLinkPreviewView: View {
         }
         .buttonStyle(.chatTactile(.card))
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .macCopyLinkContextMenu(url)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint("Opens the web page")
@@ -285,5 +286,22 @@ private extension TranscriptLinkPreviewView {
 
     private var displayURL: URL? {
         snapshot?.displayURL ?? url
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func macCopyLinkContextMenu(_ url: URL) -> some View {
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            contextMenu {
+                Button {
+                    UIPasteboard.general.url = url
+                } label: {
+                    Label("Copy Link", systemImage: "link")
+                }
+            }
+        } else {
+            self
+        }
     }
 }
