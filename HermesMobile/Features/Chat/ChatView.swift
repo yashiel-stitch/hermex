@@ -1158,11 +1158,16 @@ struct ChatView: View {
                 }
             }
             .sheet(item: $transcriptMediaPreviewItem, content: transcriptMediaPreviewView)
-            .inspector(isPresented: $showsFilesPanel) {
-                NavigationStack {
-                    FileBrowserView(files: workspaceFiles, onAPIError: onAPIError)
+            .safeAreaInset(edge: .trailing, spacing: 0) {
+                if showsFilesPanel {
+                    HStack(spacing: 0) {
+                        Divider()
+                        NavigationStack {
+                            FileBrowserView(files: workspaceFiles, onAPIError: onAPIError)
+                        }
+                        .frame(width: 380)
+                    }
                 }
-                .inspectorColumnWidth(min: 280, ideal: 380, max: 600)
             }
             .fullScreenCover(item: $attachmentImageItem) { item in
                 ChatAttachmentImageLightbox(
