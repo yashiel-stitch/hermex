@@ -31,7 +31,7 @@ extension View {
 
     @ViewBuilder
     func pendingRequestChoiceSurface(reduceTransparency: Bool) -> some View {
-        if reduceTransparency {
+        if reduceTransparency || PendingRequestKeyboard.isMac {
             background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -49,6 +49,48 @@ extension View {
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(.primary.opacity(0.10), lineWidth: 1)
                 )
+        }
+    }
+}
+
+enum PendingRequestKeyboard {
+    static let isMac = ProcessInfo.processInfo.isiOSAppOnMac
+
+    enum ReturnAction: Equatable {
+        case submit, passThrough
+    }
+
+    static func returnAction(modifiers: EventModifiers) -> ReturnAction {
+        modifiers.isDisjoint(with: [.shift, .command, .option, .control]) ? .submit : .passThrough
+    }
+}
+
+extension View {
+    @ViewBuilder
+    func pendingRequestSubmitShortcut(isPrimary: Bool = true) -> some View {
+        if PendingRequestKeyboard.isMac, isPrimary {
+            keyboardShortcut(.return, modifiers: .command)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func pendingRequestDismissShortcut() -> some View {
+        if PendingRequestKeyboard.isMac {
+            keyboardShortcut(.cancelAction)
+        } else {
+            self
+        }
+    }
+
+    func pendingRequestReturnSubmits(_ submit: @escaping () -> Void) -> some View {
+        onKeyPress(.return, phases: .down) { press in
+            guard PendingRequestKeyboard.isMac,
+                  PendingRequestKeyboard.returnAction(modifiers: press.modifiers) == .submit
+            else { return .ignored }
+            submit()
+            return .handled
         }
     }
 }

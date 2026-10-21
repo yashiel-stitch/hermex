@@ -154,6 +154,7 @@ private struct BotApprovalRequestBody: View {
                         }
                         .buttonStyle(.chatDecision(Self.emphasis(for: choice)))
                         .disabled(!isEnabled || isAnswering)
+                        .pendingRequestSubmitShortcut(isPrimary: choice == .once)
                     }
                 }
             }
@@ -268,6 +269,7 @@ private struct BotQuestionRequestBody: View {
                 }
                 .buttonStyle(.chatDecision(.primary))
                 .disabled(!canSubmit)
+                .pendingRequestSubmitShortcut()
 
                 Button(action: onSkip) {
                     Text("Skip").frame(maxWidth: .infinity)
@@ -323,11 +325,13 @@ private struct BotQuestionRequestBody: View {
                 .tint(PendingRequestSubmitButton.fill(canSubmit: canSubmit, colorScheme: colorScheme))
                 .pendingRequestFieldSurface()
                 .disabled(!isEnabled || isAnswering)
+                .pendingRequestReturnSubmits(sendIfReady)
 
             // A batch or multi-select answer is sent by the Send control below,
             // which speaks for every question at once.
             if submitsOnTap {
-                PendingRequestSubmitButton(isBusy: isAnswering, canSubmit: canSubmit) { onAnswer(answers()) }
+                PendingRequestSubmitButton(isBusy: isAnswering, canSubmit: canSubmit, action: sendIfReady)
+                    .pendingRequestSubmitShortcut()
                     .accessibilityLabel("Send answer")
             }
         }
@@ -340,6 +344,11 @@ private struct BotQuestionRequestBody: View {
 
     private func binding(for item: BotQuestionRequest.Question) -> Binding<String> {
         Binding(get: { typed[item.id] ?? "" }, set: { typed[item.id] = $0 })
+    }
+
+    private func sendIfReady() {
+        guard canSubmit else { return }
+        onAnswer(answers())
     }
 
     private func toggle(_ choice: BotQuestionRequest.Choice, in item: BotQuestionRequest.Question) {
@@ -411,6 +420,7 @@ private struct BotCredentialRequestBody: View {
                 .disabled(!canEdit)
 
             PendingRequestSubmitButton(isBusy: isAnswering, canSubmit: canSubmit, action: submit)
+                .pendingRequestSubmitShortcut()
                 .accessibilityLabel(sendLabel)
         }
         Text(credential.handling)

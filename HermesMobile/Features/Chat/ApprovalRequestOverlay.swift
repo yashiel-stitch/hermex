@@ -60,13 +60,19 @@ struct ApprovalRequestOverlay: View {
         }
         .padding(16)
         .frame(maxWidth: 520, alignment: .leading)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(.primary.opacity(0.10), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 12)
         .padding(.horizontal, 18)
+    }
+
+    private var cardFill: AnyShapeStyle {
+        PendingRequestKeyboard.isMac
+            ? AnyShapeStyle(Color(.secondarySystemBackground))
+            : AnyShapeStyle(.regularMaterial)
     }
 
     private var header: some View {
@@ -164,6 +170,7 @@ struct ApprovalRequestOverlay: View {
         }
         .buttonStyle(.chatDecision(Self.emphasis(for: choice)))
         .disabled(isResponding)
+        .pendingRequestSubmitShortcut(isPrimary: choice == .once)
     }
 
     private static func title(for choice: ApprovalChoice) -> LocalizedStringKey {

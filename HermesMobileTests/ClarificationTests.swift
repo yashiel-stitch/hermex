@@ -1,3 +1,4 @@
+import SwiftUI
 import XCTest
 @testable import HermesMobile
 
@@ -332,6 +333,13 @@ final class ClarificationTests: XCTestCase {
             approvalStreamClient: approvalStreamClient ?? ClarificationSpySSEStreamingClient(),
             clarifyStreamClient: clarifyStreamClient ?? ClarificationSpySSEStreamingClient()
         )
+    }
+
+    func testMacReturnSubmitsTheAnswerUnlessAModifierAsksForANewline() {
+        XCTAssertEqual(PendingRequestKeyboard.returnAction(modifiers: []), .submit)
+        XCTAssertEqual(PendingRequestKeyboard.returnAction(modifiers: .shift), .passThrough)
+        XCTAssertEqual(PendingRequestKeyboard.returnAction(modifiers: .command), .passThrough)
+        XCTAssertEqual(PendingRequestKeyboard.returnAction(modifiers: .option), .passThrough)
     }
 
     private func makeSession() throws -> SessionSummary {

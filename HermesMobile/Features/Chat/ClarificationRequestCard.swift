@@ -245,6 +245,7 @@ struct ClarificationRequestCard: View {
                 .clipShape(Circle())
         }
         .buttonStyle(.chatTactile(.icon))
+        .pendingRequestDismissShortcut()
         .accessibilityLabel("Collapse clarification")
     }
 
@@ -294,8 +295,10 @@ struct ClarificationRequestCard: View {
                 .tint(PendingRequestSubmitButton.fill(canSubmit: canSubmit, colorScheme: colorScheme))
                 .pendingRequestFieldSurface()
                 .disabled(isResponding)
+                .pendingRequestReturnSubmits(submitDraft)
 
             PendingRequestSubmitButton(isBusy: isResponding, canSubmit: canSubmit, action: submitDraft)
+                .pendingRequestSubmitShortcut()
                 .accessibilityLabel("Submit clarification")
         }
         .fixedSize(horizontal: false, vertical: true)
@@ -587,6 +590,7 @@ struct HermesRequestInset: View {
                 .foregroundStyle(.secondary)
         }
         .buttonStyle(.chatTactile(.icon))
+        .pendingRequestDismissShortcut()
         .accessibilityLabel("Collapse clarification")
     }
 
