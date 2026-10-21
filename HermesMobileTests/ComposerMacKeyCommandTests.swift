@@ -14,11 +14,13 @@ final class ComposerMacKeyCommandTests: XCTestCase {
         return textView
     }
 
-    func testPlainReturnIsNotClaimedOffTheMac() {
+    func testPlainReturnAndEscapeAreNotClaimedOffTheMac() {
         let textView = ComposerChipTextView()
         textView.usesMacKeyCommands = false
+        textView.isKeyboardStopEnabled = true
 
         XCTAssertNil(command("\r", in: textView))
+        XCTAssertNil(command(UIKeyCommand.inputEscape, in: textView))
     }
 
     func testReturnSendsOnlyThroughTheSendGateAndYieldsToIMEComposition() throws {
@@ -45,5 +47,24 @@ final class ComposerMacKeyCommandTests: XCTestCase {
         textView.setMarkedText("か", selectedRange: NSRange(location: 0, length: 1))
         XCTAssertNotNil(textView.markedTextRange)
         XCTAssertFalse(textView.canPerformAction(send, withSender: nil), "IME composition keeps Return")
+    }
+
+    func testEscapeIsClaimedOnlyWhileAStopIsAvailable() throws {
+        let textView = macTextView()
+        var stops = 0
+        textView.onKeyboardStop = { stops += 1 }
+
+        XCTAssertNil(command(UIKeyCommand.inputEscape, in: textView))
+
+        textView.isKeyboardStopEnabled = true
+        let stop = try XCTUnwrap(command(UIKeyCommand.inputEscape, in: textView)?.action)
+        XCTAssertTrue(textView.canPerformAction(stop, withSender: nil))
+        textView.perform(stop, with: nil)
+        XCTAssertEqual(stops, 1)
+
+        textView.isKeyboardStopEnabled = false
+        XCTAssertFalse(textView.canPerformAction(stop, withSender: nil))
+        textView.perform(stop, with: nil)
+        XCTAssertEqual(stops, 1)
     }
 }

@@ -64,8 +64,10 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
 
     var acceptsAttachments = true
     var isKeyboardSendEnabled = false
+    var isKeyboardStopEnabled = false
     var usesMacKeyCommands = ProcessInfo.processInfo.isiOSAppOnMac
     var onKeyboardSend: () -> Void = {}
+    var onKeyboardStop: () -> Void = {}
     /// The chat's last sent message, which ↑ brings back into an empty editor
     /// on a hardware keyboard. Nil where there is no single author to recall
     /// (Bot rooms), which leaves ↑ to move the caret.
@@ -596,6 +598,13 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
             )
             returnCommand.wantsPriorityOverSystemBehavior = true
             commands.append(returnCommand)
+            if isKeyboardStopEnabled {
+                commands.append(UIKeyCommand(
+                    input: UIKeyCommand.inputEscape,
+                    modifierFlags: [],
+                    action: #selector(stopResponseFromKeyboard)
+                ))
+            }
         }
         guard recallLastSentText != nil else {
             return commands
@@ -621,6 +630,10 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
             return markedTextRange == nil
         }
 
+        if action == #selector(stopResponseFromKeyboard) {
+            return isKeyboardStopEnabled
+        }
+
         if action == #selector(recallLastSentTextFromKeyboard) {
             return recallableText != nil
         }
@@ -643,6 +656,11 @@ final class ComposerChipTextView: UITextView, UIGestureRecognizerDelegate {
 
     @objc private func sendMessageFromReturnKey() {
         sendMessageFromKeyboard()
+    }
+
+    @objc private func stopResponseFromKeyboard() {
+        guard isKeyboardStopEnabled else { return }
+        onKeyboardStop()
     }
 
     /// What ↑ would bring back. Only an empty editor takes it, so ↑ inside a

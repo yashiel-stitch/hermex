@@ -38,6 +38,7 @@ struct ComposerTextInputView: View {
     /// the draft survive the pill-to-card morph without recreating it.
     let isCollapsed: Bool
     let isKeyboardSendEnabled: Bool
+    var isKeyboardStopEnabled = false
     let verticalPadding: CGFloat
     /// The skills whose references the editor draws as chips. Empty until the
     /// server's skill list has loaded, which leaves the draft as plain text.
@@ -48,6 +49,7 @@ struct ComposerTextInputView: View {
     var chipBots: [String: ComposerBotReference] = [:]
     let quotes: [ComposerQuote]
     let onKeyboardSend: () -> Void
+    var onKeyboardStop: () -> Void = {}
     let onPasteFileProviders: ([NSItemProvider]) -> Void
     let onPasteFileURLs: ([URL]) -> Void
     let onPasteImageProviders: ([NSItemProvider]) -> Void
@@ -73,6 +75,7 @@ struct ComposerTextInputView: View {
                 isFocused: $isFocused,
                 isDisabled: isDisabled,
                 isKeyboardSendEnabled: isKeyboardSendEnabled,
+                isKeyboardStopEnabled: isKeyboardStopEnabled,
                 chipSkills: chipSkills,
                 chipFilePaths: chipFilePaths,
                 chipBots: chipBots,
@@ -82,6 +85,7 @@ struct ComposerTextInputView: View {
                 onTapQuote: onTapQuote,
                 onRemoveQuote: onRemoveQuote,
                 onKeyboardSend: onKeyboardSend,
+                onKeyboardStop: onKeyboardStop,
                 recallLastSentText: recallLastSentText,
                 onHeightChange: updateMeasuredHeight,
                 onPasteFileProviders: onPasteFileProviders,
@@ -200,6 +204,7 @@ private struct ComposerTextView: UIViewRepresentable {
     @Binding var isFocused: Bool
     let isDisabled: Bool
     let isKeyboardSendEnabled: Bool
+    let isKeyboardStopEnabled: Bool
     let chipSkills: [SkillSlashSuggestion]
     let chipFilePaths: Set<String>
     let chipBots: [String: ComposerBotReference]
@@ -209,6 +214,7 @@ private struct ComposerTextView: UIViewRepresentable {
     let onTapQuote: (ComposerQuote) -> Void
     let onRemoveQuote: (UUID) -> Void
     let onKeyboardSend: () -> Void
+    let onKeyboardStop: () -> Void
     let recallLastSentText: (() -> String?)?
     let onHeightChange: (CGFloat) -> Void
     let onPasteFileProviders: ([NSItemProvider]) -> Void
@@ -246,7 +252,9 @@ private struct ComposerTextView: UIViewRepresentable {
         // which would reach the server as an object-replacement character.
         textView.allowsEditingTextAttributes = false
         textView.isKeyboardSendEnabled = isKeyboardSendEnabled
+        textView.isKeyboardStopEnabled = isKeyboardStopEnabled
         textView.onKeyboardSend = onKeyboardSend
+        textView.onKeyboardStop = onKeyboardStop
         textView.recallLastSentText = recallLastSentText
         textView.onPasteFileProviders = onPasteFileProviders
         textView.onPasteFileURLs = onPasteFileURLs
@@ -279,7 +287,9 @@ private struct ComposerTextView: UIViewRepresentable {
         context.coordinator.acceptsAttachments = acceptsAttachments
         context.coordinator.syncEditing(for: textView, isDisabled: isDisabled)
         textView.isKeyboardSendEnabled = isKeyboardSendEnabled
+        textView.isKeyboardStopEnabled = isKeyboardStopEnabled
         textView.onKeyboardSend = onKeyboardSend
+        textView.onKeyboardStop = onKeyboardStop
         textView.recallLastSentText = recallLastSentText
         textView.onPasteFileProviders = onPasteFileProviders
         textView.onPasteFileURLs = onPasteFileURLs
