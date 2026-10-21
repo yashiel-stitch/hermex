@@ -299,6 +299,7 @@ private struct ChatCodeBlock: View {
                 ScrollView(.horizontal) {
                     styledCodeText(fixedHorizontal: true)
                 }
+                .scrollIndicators(markdownHorizontalScrollIndicators, axes: .horizontal)
             }
         }
         .background(codeBlockBackground)
@@ -1192,6 +1193,9 @@ private extension MarkdownUI.Theme {
     }
 }
 
+private let markdownHorizontalScrollIndicators: ScrollIndicatorVisibility =
+    ProcessInfo.processInfo.isiOSAppOnMac ? .visible : .automatic
+
 private struct ChatMarkdownTable: View {
     static let cellMinWidth: CGFloat = 96
     static let cellMaxWidth: CGFloat = 260
@@ -1214,6 +1218,7 @@ private struct ChatMarkdownTable: View {
                 )
         }
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+        .scrollIndicators(markdownHorizontalScrollIndicators, axes: .horizontal)
 
         if let edgeFadeColor {
             scroller.horizontalOverflowFades(.overlay(edgeFadeColor))
