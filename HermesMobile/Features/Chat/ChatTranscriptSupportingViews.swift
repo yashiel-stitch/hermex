@@ -885,10 +885,27 @@ final class ChatVerticalScrollAxisGuardView: UIView {
         )
         guard abs(scrollView.contentOffset.x - pinnedX) > 0.5 else { return }
 
+        if Self.defersResetWhileScrolling, scrollView.isDragging || scrollView.isTracking || scrollView.isDecelerating {
+            pendingClamp?.cancel()
+            let work = DispatchWorkItem { [weak self] in self?.clampHorizontalOffset() }
+            pendingClamp = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+            return
+        }
+
+        MacGestureBreadcrumbs.transition(
+            "axis-guard",
+            "reset",
+            detail: "dx=\(String(format: "%.1f", scrollView.contentOffset.x - pinnedX)) contentW=\(Int(scrollView.contentSize.width)) boundsW=\(Int(scrollView.bounds.width))"
+        )
         var offset = scrollView.contentOffset
         offset.x = pinnedX
         scrollView.setContentOffset(offset, animated: false)
     }
+
+    private var pendingClamp: DispatchWorkItem?
+    private static let defersResetWhileScrolling = ProcessInfo.processInfo.isiOSAppOnMac
+        && !UserDefaults.standard.bool(forKey: "HXMacAxisGuardImmediate")
 
     /// The horizontal content offset the transcript should rest at, pinned to the
     /// layout-direction-aware *leading* edge so the vertical-only transcript never
