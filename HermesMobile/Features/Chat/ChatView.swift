@@ -278,6 +278,8 @@ struct ChatView: View {
     @AppStorage(ChatTranscriptDisplaySettings.rtlChatLayoutEnabledKey) private var rtlChatLayoutEnabled = ChatTranscriptDisplaySettings.rtlChatLayoutDefaultEnabled
     @AppStorage(SectionVisibilitySettings.chatFilesKey) private var showsFilesButton = true
     @AppStorage(SectionVisibilitySettings.chatGitKey) private var showsGitControls = true
+    @State private var showsFilesPanel = false
+    private let opensFilesAsPanel = ProcessInfo.processInfo.isiOSAppOnMac
 
     let session: SessionSummary
     let server: URL
@@ -1098,13 +1100,23 @@ struct ChatView: View {
 
                         if showsFilesButton, !isHermesSession || browsableHermesWorkspace != nil {
                             ChatToolbarActionSlot {
-                                NavigationLink {
-                                    FileBrowserView(files: workspaceFiles, onAPIError: onAPIError)
-                                } label: {
-                                    Label("Files", systemImage: "folder")
+                                if opensFilesAsPanel {
+                                    Button {
+                                        showsFilesPanel.toggle()
+                                    } label: {
+                                        Label("Files", systemImage: "folder")
+                                    }
+                                    .disabled(viewModel.isViewingCachedData)
+                                    .accessibilityLabel("Files")
+                                } else {
+                                    NavigationLink {
+                                        FileBrowserView(files: workspaceFiles, onAPIError: onAPIError)
+                                    } label: {
+                                        Label("Files", systemImage: "folder")
+                                    }
+                                    .disabled(viewModel.isViewingCachedData)
+                                    .accessibilityLabel("Files")
                                 }
-                                .disabled(viewModel.isViewingCachedData)
-                                .accessibilityLabel("Files")
                             }
                         }
 
@@ -1146,6 +1158,12 @@ struct ChatView: View {
                 }
             }
             .sheet(item: $transcriptMediaPreviewItem, content: transcriptMediaPreviewView)
+            .inspector(isPresented: $showsFilesPanel) {
+                NavigationStack {
+                    FileBrowserView(files: workspaceFiles, onAPIError: onAPIError)
+                }
+                .inspectorColumnWidth(min: 280, ideal: 380, max: 600)
+            }
             .fullScreenCover(item: $attachmentImageItem) { item in
                 ChatAttachmentImageLightbox(
                     session: session,
