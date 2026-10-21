@@ -988,6 +988,17 @@ struct ChatView: View {
         .overlay(alignment: .top) {
             GitActionToastOverlay(state: gitToastState)
         }
+        .modifier(
+            ChatScreenDropTarget(
+                isEnabled: composerReadOnlyMessage == nil,
+                onFileProviders: { providers in
+                    Task { await handlePastedFileProviders(providers) }
+                },
+                onImageProviders: { providers in
+                    Task { await handlePastedImageProviders(providers) }
+                }
+            )
+        )
         .navigationTitle(viewModel.hermesBotChat?.botProfile?.name ?? displayTitle)
         .navigationBarTitleDisplayMode(.inline)
         // A bot's pill names the chat; its title stays only for Back on screens pushed over it.

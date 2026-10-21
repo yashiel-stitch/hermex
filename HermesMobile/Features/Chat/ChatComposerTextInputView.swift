@@ -684,6 +684,30 @@ struct ComposerDropRoute {
     }
 }
 
+struct ChatScreenDropTarget: ViewModifier {
+    let isEnabled: Bool
+    let onFileProviders: ([NSItemProvider]) -> Void
+    let onImageProviders: ([NSItemProvider]) -> Void
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            content.onDrop(of: [.fileURL, .image], isTargeted: nil) { providers in
+                guard isEnabled, let route = ComposerDropRoute(providers: providers) else { return false }
+                if !route.files.isEmpty {
+                    onFileProviders(route.files)
+                }
+                if !route.images.isEmpty {
+                    onImageProviders(route.images)
+                }
+                return true
+            }
+        } else {
+            content
+        }
+    }
+}
+
 enum ComposerKeyboardCommand {
     static let title = String(localized: "Send Message")
     static let input = "\r"
