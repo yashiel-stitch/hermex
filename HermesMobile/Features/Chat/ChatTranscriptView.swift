@@ -214,7 +214,7 @@ struct ChatTranscriptView: View {
                         for: .sizeChanges
                     )
                     .frame(width: viewportWidth)
-                    .refreshable {
+                    .transcriptPullToRefresh {
                         if hasOlderMessages {
                             await loadOlderMessagesPreservingPosition(proxy: proxy)
                         } else {
@@ -1073,5 +1073,16 @@ enum ChatTranscriptRowFreshness {
     static func isFresh(timestamp: Double?, now: Date) -> Bool {
         guard let timestamp, timestamp.isFinite else { return false }
         return abs(now.timeIntervalSince1970 - timestamp) < window
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func transcriptPullToRefresh(action: @escaping @Sendable () async -> Void) -> some View {
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            self
+        } else {
+            refreshable(action: action)
+        }
     }
 }
