@@ -127,6 +127,8 @@ struct ChatScrollObserver: UIViewRepresentable {
         private var isUserScrollSessionActive = false
         private var settleWorkItem: DispatchWorkItem?
         private let infersScrollSessionFromOffset = ProcessInfo.processInfo.isiOSAppOnMac
+        private var lastObservedOffsetY: CGFloat?
+        private var lastOffsetChangeTime = CACurrentMediaTime()
         var scrollPositionController: ChatScrollPositionController? {
             didSet {
                 guard oldValue !== scrollPositionController else { return }
@@ -274,8 +276,19 @@ struct ChatScrollObserver: UIViewRepresentable {
         private func finishUserScrollSession(isAtBottom: Bool) {
             cancelSettle()
             isUserScrollSessionActive = false
-            MacGestureBreadcrumbs.transition("transcript", "scroll-ended", detail: "atBottom=\(isAtBottom)")
+            MacGestureBreadcrumbs.transition("transcript", "scroll-ended", detail: scrollEndedBreadcrumbDetail(isAtBottom: isAtBottom))
             onFollowEvent(.userScrollEnd(isAtBottom: isAtBottom))
+        }
+
+        private func scrollEndedBreadcrumbDetail(isAtBottom: Bool) -> String {
+            let sinceOffsetChangeMs = Int((CACurrentMediaTime() - lastOffsetChangeTime) * 1000)
+            return "atBottom=\(isAtBottom) dragging=\(scrollView?.isDragging ?? false) tracking=\(scrollView?.isTracking ?? false) decelerating=\(scrollView?.isDecelerating ?? false) sinceOffsetChangeMs=\(sinceOffsetChangeMs)"
+        }
+
+        private func noteOffsetChange(_ offsetY: CGFloat) {
+            guard MacGestureBreadcrumbs.isEnabled, offsetY != lastObservedOffsetY else { return }
+            lastObservedOffsetY = offsetY
+            lastOffsetChangeTime = CACurrentMediaTime()
         }
 
         private func endUserScrollSessionSilently() {
@@ -326,6 +339,7 @@ struct ChatScrollObserver: UIViewRepresentable {
             trackMomentum(scrollView)
 
             guard let geometry = geometry(of: scrollView) else { return }
+            noteOffsetChange(geometry.offsetY)
             let isUserInteracting = scrollView.isDragging || scrollView.isTracking || scrollView.isDecelerating
             // While a disclosure pin holds the offset, a toggled row growing
             // below the reader increases the distance without anyone scrolling.

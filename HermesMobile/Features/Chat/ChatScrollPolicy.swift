@@ -10,8 +10,9 @@ enum MacGestureBreadcrumbs {
         category: "mac-gestures"
     )
 
-    static func transition(_ view: StaticString, _ state: StaticString, detail: String = "") {
+    static func transition(_ view: StaticString, _ state: StaticString, detail: @autoclosure () -> String = "") {
         guard isEnabled else { return }
+        let detail = detail()
         logger.info("\(view, privacy: .public) \(state, privacy: .public) \(detail, privacy: .public)")
     }
 }
@@ -65,10 +66,16 @@ enum ChatScrollPolicy {
     /// How long a finished drag waits for momentum to announce itself before the
     /// release position is treated as final. Finger-lift velocity is not a
     /// reliable signal: a gentle fling can report zero and still decelerate.
-    static let dragSettleDelay: TimeInterval = 0.16
+    static let dragSettleDelay: TimeInterval = macSettleDelay(key: "HXMacDragSettle", mac: 0.35, phone: 0.16)
 
     /// Gap between momentum ticks that means deceleration has stopped.
-    static let momentumSettleDelay: TimeInterval = 0.05
+    static let momentumSettleDelay: TimeInterval = macSettleDelay(key: "HXMacMomentumSettle", mac: 0.15, phone: 0.05)
+
+    private static func macSettleDelay(key: String, mac: TimeInterval, phone: TimeInterval) -> TimeInterval {
+        guard ProcessInfo.processInfo.isiOSAppOnMac else { return phone }
+        let stored = UserDefaults.standard.double(forKey: key)
+        return stored > 0 ? stored : mac
+    }
 
     /// How long follow scrolls and the bottom size-change anchor stay suspended
     /// after a disclosure toggle. Covers the disclosure animation plus a frame.
