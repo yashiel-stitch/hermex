@@ -78,7 +78,7 @@ struct BotPendingRequestCard: View {
             }
         }
         .padding(16)
-        .frame(maxWidth: 560, alignment: .leading)
+        .frame(maxWidth: PendingRequestCardWidth.maximum, alignment: .leading)
         .pendingRequestCardSurface(cornerRadius: Self.cornerRadius)
         .accessibilityElement(children: .contain)
         .onChange(of: request.requestID, initial: true) { announce() }

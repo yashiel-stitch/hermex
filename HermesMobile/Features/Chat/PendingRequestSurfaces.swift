@@ -53,6 +53,12 @@ extension View {
     }
 }
 
+enum PendingRequestCardWidth {
+    static let maximum: CGFloat = PendingRequestKeyboard.isMac ? .infinity : 560
+    static let approvalMaximum: CGFloat = PendingRequestKeyboard.isMac ? .infinity : 520
+    static let approvalHorizontalPadding: CGFloat = PendingRequestKeyboard.isMac ? 16 : 18
+}
+
 enum PendingRequestKeyboard {
     static let isMac = ProcessInfo.processInfo.isiOSAppOnMac
 

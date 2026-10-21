@@ -156,7 +156,7 @@ struct ClarificationRequestBar: View {
         .padding(.leading, 14)
         .padding(.trailing, 8)
         .padding(.vertical, 8)
-        .frame(maxWidth: 560)
+        .frame(maxWidth: PendingRequestCardWidth.maximum)
         .pendingRequestCardSurface(cornerRadius: ChatComposerMetrics.cardCornerRadius)
         .accessibilityElement(children: .contain)
     }
@@ -186,7 +186,7 @@ struct ClarificationRequestCard: View {
     private let verticalPadding: CGFloat = 32
     var body: some View {
         cardContent
-            .frame(maxWidth: 560, alignment: .leading)
+            .frame(maxWidth: PendingRequestCardWidth.maximum, alignment: .leading)
             .pendingRequestCardSurface(cornerRadius: ChatComposerMetrics.cardCornerRadius)
             // Honor the clamped ideal height; hide only until base measurements settle.
             .fixedSize(horizontal: false, vertical: true)
@@ -577,7 +577,7 @@ struct HermesRequestInset: View {
             .scrollBounceBehavior(.basedOnSize)
             .frame(height: max(0, min(contentHeight ?? availableScrollHeight, availableScrollHeight)))
         }
-        .frame(maxWidth: 560)
+        .frame(maxWidth: PendingRequestCardWidth.maximum)
         .opacity(contentHeight == nil ? 0 : 1)
     }
 

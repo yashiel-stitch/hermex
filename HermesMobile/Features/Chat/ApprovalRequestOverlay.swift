@@ -59,14 +59,14 @@ struct ApprovalRequestOverlay: View {
             actions
         }
         .padding(16)
-        .frame(maxWidth: 520, alignment: .leading)
+        .frame(maxWidth: PendingRequestCardWidth.approvalMaximum, alignment: .leading)
         .background(cardFill, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .stroke(.primary.opacity(0.10), lineWidth: 1)
         )
         .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 12)
-        .padding(.horizontal, 18)
+        .padding(.horizontal, PendingRequestCardWidth.approvalHorizontalPadding)
     }
 
     private var cardFill: AnyShapeStyle {
