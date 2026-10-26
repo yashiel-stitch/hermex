@@ -12,6 +12,9 @@ Thin classification of upstream `hermes-webui` route groups against Hermex.
 Owner-observed mobile bugs and polish stay in GitHub Issues unless the item is
 an upstream WebUI parity gap.
 
+Webui chats can turn session approval bypass off from the bypass pill or toggle it
+with `/yolo`.
+
 ## Status vocabulary
 
 | Status | Meaning | Source |
