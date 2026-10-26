@@ -171,6 +171,12 @@ enum SlashCommandCatalog {
             subArgs: .goalActions
         ),
         SlashCommand(
+            name: "yolo",
+            description: String(localized: "Skip approvals in this chat, or ask again"),
+            noEcho: true,
+            handler: .serverSide(.yolo)
+        ),
+        SlashCommand(
             name: "btw",
             description: String(localized: "Ask a side question"),
             argHint: String(localized: "question"),

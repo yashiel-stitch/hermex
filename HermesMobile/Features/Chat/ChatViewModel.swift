@@ -3780,7 +3780,7 @@ final class ChatViewModel {
         case .goal:
             return await submitGoalFromSlashCommand(args)
         case .yolo:
-            return await toggleHermesApprovalBypassFromSlashCommand()
+            return await toggleApprovalBypassFromSlashCommand()
         }
     }
 
@@ -4210,20 +4210,27 @@ final class ChatViewModel {
         if activeStreamID == nil { appendLocalNoticeMessage(text) } else { pinLocalNoticeMessage(text) }
     }
 
-    /// `/yolo` in a Hermes chat (#1036): this session's approval bypass, through the same
-    /// `config.set yolo` as the approval card's Skip all and the bypass pill.
-    private func toggleHermesApprovalBypassFromSlashCommand() async -> SlashCommandExecutionResult {
-        guard let requests = hermesRequests else {
-            return .unsupported(friendlyMessage: SlashCommandExecutor.unsupportedMessage(for: "yolo"))
-        }
-        if requests.approvalBypass, !requests.mayTurnOffApprovalBypass {
-            return notDelivered(String(localized: "This Hermes host approves every command itself, so approvals can't be turned back on from here."))
-        }
-        sendErrorMessage = nil
-        guard let enabled = await requests.toggleApprovalBypass() else {
-            return sendErrorMessage == nil
-                ? notDelivered(String(localized: "Reconnect to the server to run /\("yolo")."))
-                : .notDelivered
+    private func toggleApprovalBypassFromSlashCommand() async -> SlashCommandExecutionResult {
+        let enabled: Bool
+        if let requests = hermesRequests {
+            if requests.approvalBypass, !requests.mayTurnOffApprovalBypass {
+                return notDelivered(String(localized: "This Hermes host approves every command itself, so approvals can't be turned back on from here."))
+            }
+            sendErrorMessage = nil
+            guard let updated = await requests.toggleApprovalBypass() else {
+                return sendErrorMessage == nil
+                    ? notDelivered(String(localized: "Reconnect to the server to run /\("yolo")."))
+                    : .notDelivered
+            }
+            enabled = updated
+        } else {
+            guard sessionID != nil else {
+                return .unsupported(friendlyMessage: SlashCommandExecutor.unsupportedMessage(for: "yolo"))
+            }
+            guard await pendingActionCoordinator.setApprovalBypass(enabled: !isSessionApprovalBypassEnabled) else {
+                return .notDelivered
+            }
+            enabled = isSessionApprovalBypassEnabled
         }
         notifyLocally(enabled
                       ? String(localized: "Approvals are skipped in this chat. Run /yolo again to turn them back on.")

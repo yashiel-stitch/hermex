@@ -2284,6 +2284,32 @@ final class ChatViewModelSendTests: XCTestCase {
     }
 
     @MainActor
+    func testWebuiYoloSlashCommandTogglesApprovalBypass() async throws {
+        var enabledValues: [Bool] = []
+        let viewModel = try makeViewModel(handler: routes([
+            "/api/session/yolo": { request in
+                XCTAssertEqual(request.httpMethod, "POST")
+                let body = try XCTUnwrap(apiTestJSONBody(from: request))
+                XCTAssertEqual(body["session_id"] as? String, "session-abc")
+                let enabled = try XCTUnwrap(body["enabled"] as? Bool)
+                enabledValues.append(enabled)
+                return apiTestJSONResponse("{\"ok\":true,\"yolo_enabled\":\(enabled)}", for: request)
+            },
+            "/api/approval/pending": jsonReply(#"{"pending_count":0}"#),
+        ]))
+
+        let enabledResult = await SlashCommandExecutor.execute(text: "/yolo", viewModel: viewModel)
+        XCTAssertEqual(enabledResult, .executed(message: nil))
+        XCTAssertTrue(viewModel.isSessionApprovalBypassEnabled)
+        XCTAssertFalse(viewModel.messages.isEmpty)
+
+        let disabledResult = await SlashCommandExecutor.execute(text: "/yolo", viewModel: viewModel)
+        XCTAssertEqual(disabledResult, .executed(message: nil))
+        XCTAssertFalse(viewModel.isSessionApprovalBypassEnabled)
+        XCTAssertEqual(enabledValues, [true, false])
+    }
+
+    @MainActor
     func testTurnOffApprovalBypassClearsStateAndRefreshesPendingApproval() async throws {
         var yoloBody: [String: Any]?
         let viewModel = try makeViewModel(handler: routes([
