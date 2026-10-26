@@ -173,19 +173,43 @@ final class ChatPendingActionCoordinator {
               prompt.sessionID == delegate?.pendingActionSessionID
         else { return false }
 
+        return await setApprovalBypass(enabled: true)
+    }
+
+    @discardableResult
+    func turnOffApprovalBypass() async -> Bool {
+        await setApprovalBypass(enabled: false)
+    }
+
+    @discardableResult
+    func setApprovalBypass(enabled: Bool) async -> Bool {
+        guard !isRespondingToApproval,
+              let sessionID = delegate?.pendingActionSessionID
+        else { return false }
+
         isRespondingToApproval = true
         approvalErrorMessage = nil
         delegate?.pendingActionCoordinatorWillSubmitAction()
         defer { isRespondingToApproval = false }
 
         do {
-            let response = try await client.setSessionYolo(sessionID: prompt.sessionID, enabled: true)
-            isSessionApprovalBypassEnabled = response.yoloEnabled ?? true
+            let response = try await client.setSessionYolo(sessionID: sessionID, enabled: enabled)
+            guard !Task.isCancelled, delegate?.pendingActionSessionID == sessionID else { return false }
+            if response.ok == false {
+                throw APIError.http(statusCode: 400, body: nil)
+            }
+            isSessionApprovalBypassEnabled = response.yoloEnabled ?? enabled
             approvalStateGeneration &+= 1
-            approvalPendingBySession[prompt.sessionID] = nil
-            approvalPrompt = nil
+            if isSessionApprovalBypassEnabled {
+                approvalPendingBySession[sessionID] = nil
+                approvalPrompt = nil
+            } else {
+                renderApprovalPromptForCurrentSession()
+                await refreshApprovalPending(sessionID: sessionID)
+            }
             return true
         } catch {
+            guard !Task.isCancelled, delegate?.pendingActionSessionID == sessionID else { return false }
             approvalErrorMessage = error.localizedDescription
             delegate?.pendingActionCoordinatorDidFailAction(error)
             return false

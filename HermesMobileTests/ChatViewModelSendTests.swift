@@ -2284,6 +2284,57 @@ final class ChatViewModelSendTests: XCTestCase {
     }
 
     @MainActor
+    func testTurnOffApprovalBypassClearsStateAndRefreshesPendingApproval() async throws {
+        var yoloBody: [String: Any]?
+        let viewModel = try makeViewModel(handler: routes([
+            "/api/session/yolo": { request in
+                if request.httpMethod == "GET" {
+                    return apiTestJSONResponse(#"{"ok":true,"yolo_enabled":true}"#, for: request)
+                }
+                XCTAssertEqual(request.httpMethod, "POST")
+                yoloBody = try XCTUnwrap(apiTestJSONBody(from: request))
+                return apiTestJSONResponse(#"{"ok":true,"yolo_enabled":false}"#, for: request)
+            },
+            "/api/approval/pending": jsonReply(#"{"pending":{"approval_id":"approval-restored","command":"make install"},"pending_count":1}"#),
+        ]))
+        await viewModel.refreshApprovalBypassState()
+        XCTAssertTrue(viewModel.isSessionApprovalBypassEnabled)
+        XCTAssertNil(viewModel.approvalPrompt)
+
+        let didTurnOff = await viewModel.turnOffApprovalBypass()
+
+        XCTAssertTrue(didTurnOff)
+        XCTAssertEqual(yoloBody?["session_id"] as? String, "session-abc")
+        XCTAssertEqual(yoloBody?["enabled"] as? Bool, false)
+        XCTAssertFalse(viewModel.isSessionApprovalBypassEnabled)
+        XCTAssertEqual(viewModel.approvalPrompt?.pending.approvalId, "approval-restored")
+        XCTAssertFalse(viewModel.isRespondingToApproval)
+        viewModel.cleanupPollingTasks()
+    }
+
+    @MainActor
+    func testFailedTurnOffApprovalBypassKeepsBypassEnabled() async throws {
+        let viewModel = try makeViewModel(handler: routes([
+            "/api/session/yolo": { request in
+                if request.httpMethod == "GET" {
+                    return apiTestJSONResponse(#"{"ok":true,"yolo_enabled":true}"#, for: request)
+                }
+                return apiTestJSONResponse(#"{"error":"not allowed"}"#, for: request, status: 403)
+            },
+        ]))
+        await viewModel.refreshApprovalBypassState()
+        XCTAssertTrue(viewModel.isSessionApprovalBypassEnabled)
+
+        let didTurnOff = await viewModel.turnOffApprovalBypass()
+
+        XCTAssertFalse(didTurnOff)
+        XCTAssertTrue(viewModel.isSessionApprovalBypassEnabled)
+        XCTAssertNotNil(viewModel.approvalErrorMessage)
+        XCTAssertNotNil(viewModel.sendErrorMessage)
+        XCTAssertFalse(viewModel.isRespondingToApproval)
+    }
+
+    @MainActor
     func testLiveStreamEventsUpdateTranscriptBeforeCompletion() async throws {
         let streamClient = SpySSEStreamingClient()
         let viewModel = try makeViewModel(streamClient: streamClient, handler: routes(["/api/chat/start": chatStarted()]))

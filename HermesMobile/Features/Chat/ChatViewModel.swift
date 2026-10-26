@@ -6404,6 +6404,11 @@ final class ChatViewModel {
         await pendingActionCoordinator.skipApprovalsForCurrentSession()
     }
 
+    @discardableResult
+    func turnOffApprovalBypass() async -> Bool {
+        await pendingActionCoordinator.turnOffApprovalBypass()
+    }
+
     func applyApprovalUpdate(_ update: ApprovalPendingResponse, sessionID: String) {
         pendingActionCoordinator.applyApprovalUpdate(update, sessionID: sessionID)
     }
