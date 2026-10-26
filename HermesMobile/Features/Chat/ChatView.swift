@@ -2016,8 +2016,6 @@ struct ChatView: View {
         )
     }
 
-    /// Reports the bypass; on a Hermes session it also turns off the session's own flag
-    /// (#1011). A bypass the host sets itself only reports.
     @ViewBuilder
     private var approvalBypassStatusPill: some View {
         if let requests = viewModel.hermesRequests, requests.mayTurnOffApprovalBypass {
@@ -2025,6 +2023,11 @@ struct ChatView: View {
                 Task { await requests.turnOffApprovalBypass() }
             })
             .disabled(requests.isChangingApprovalBypass)
+        } else if viewModel.hermesRequests == nil, viewModel.isSessionApprovalBypassEnabled {
+            ApprovalBypassStatusPill(onTurnOff: {
+                Task { await viewModel.turnOffApprovalBypass() }
+            })
+            .disabled(viewModel.isRespondingToApproval)
         } else {
             ApprovalBypassStatusPill()
                 .allowsHitTesting(false)
