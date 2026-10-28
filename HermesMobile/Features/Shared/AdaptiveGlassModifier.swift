@@ -183,7 +183,7 @@ private struct AdaptiveGlassModifier<S: Shape>: ViewModifier {
             if let tint {
                 glass = glass.tint(tint)
             }
-            if isInteractive {
+            if isInteractive && !ProcessInfo.processInfo.isiOSAppOnMac {
                 glass = glass.interactive()
             }
             return glass

@@ -42,7 +42,7 @@ extension View {
             // button's height, so on tall multi-line options the curved ends bow
             // inward and clip the text. A fixed radius keeps the outline clear of
             // the label at any line count and matches the fallbacks below.
-            glassEffect(.regular.interactive(), in: .rect(cornerRadius: 14))
+            glassEffect(.regular.interactive(!ProcessInfo.processInfo.isiOSAppOnMac), in: .rect(cornerRadius: 14))
         } else {
             background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
