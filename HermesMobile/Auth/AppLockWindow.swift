@@ -22,6 +22,7 @@ import UIKit
         guard let windowScene = scene as? UIWindowScene, session.role == .windowApplication else { return }
         if ProcessInfo.processInfo.isiOSAppOnMac {
             windowScene.sizeRestrictions?.minimumSize = CGSize(width: 960, height: 600)
+            windowScene.traitOverrides.activeAppearance = .active
         }
         let window = UIWindow(windowScene: windowScene)
         window.windowLevel = .alert + 1
