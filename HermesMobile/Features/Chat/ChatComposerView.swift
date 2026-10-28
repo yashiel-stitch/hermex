@@ -1106,7 +1106,7 @@ struct MessageComposerView: View {
     /// The gesture state resets on a cancelled touch too, so a hold can never
     /// stay armed.
     private var sendHoldGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
+        ComposerHoldGesture.drag
             .updating($isPressingSend) { _, isPressing, _ in
                 isPressing = true
             }

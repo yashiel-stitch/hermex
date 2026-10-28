@@ -1,6 +1,15 @@
 import Foundation
 import SwiftUI
 
+enum ComposerHoldGesture {
+    static var drag: DragGesture {
+        if #available(iOS 27.0, *), ProcessInfo.processInfo.isiOSAppOnMac {
+            return DragGesture(minimumDistance: 0, coordinateSpace: .local, inputKinds: .pointer)
+        }
+        return DragGesture(minimumDistance: 0)
+    }
+}
+
 struct ComposerVoiceStatus: Equatable {
     let text: String
     let systemImage: String
@@ -97,7 +106,7 @@ struct ComposerVoiceControlButton: View {
     /// before the delay cancels it and counts as a tap → dictation. A perfectly
     /// still hold still records because the delay is timer-driven, not movement-driven.
     private var pressGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
+        ComposerHoldGesture.drag
             .onChanged { value in
                 if !isPressing {
                     isPressing = true
